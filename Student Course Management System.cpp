@@ -1,205 +1,242 @@
-﻿#include <iostream>
+#include <iostream>
 #include <vector>
 #include <set>
 #include <algorithm>
 using namespace std;
 
-// ================= BASE CLASS =================
+// ================= Person =================
 class Person {
 protected:
     string name;
 
 public:
-    Person(string n = "") : name(n) {}
-    string getName() const { return name; }
+    Person(string n = "") {
+        name = n;
+    }
+
+    string getName() {
+        return name;
+    }
 };
 
-// ================= DERIVED CLASS =================
+// ================= Student =================
 class Student : public Person {
 private:
     int id;
     double gpa;
-    set<string> courses; // prevents duplicates
+    set<string> courses; // 
 
 public:
-    Student(int id, string name, double gpa)
-        : Person(name), id(id), gpa(gpa) {
+    Student(int i, string n, double g) : Person(n) {
+        id = i;
+        gpa = g;
     }
 
-    int getId() const { return id; }
-    double getGpa() const { return gpa; }
+    int getId() {
+        return id;
+    }
 
-    void addCourse(const string& course) {
+    double getGpa() {
+        return gpa;
+    }
+
+    void display() {
+        cout << "ID: " << id << " | Name: " << name << " | GPA: " << gpa << endl;
+    }
+
+    void addCourse(string course) {
         courses.insert(course);
     }
 
-    void showCourses() const {
+    void showCourses() {
         if (courses.empty()) {
-            cout << "No courses enrolled.\n";
+            cout << "No courses.\n";
             return;
         }
-        for (const auto& c : courses)
-            cout << "- " << c << endl;
-    }
 
-    void display() const {
-        cout << "ID: " << id
-            << " | Name: " << name
-            << " | GPA: " << gpa << endl;
+        for (string c : courses) {
+            cout << "- " << c << endl;
+        }
     }
 };
 
-// ================= SYSTEM CLASS =================
-class StudentSystem {
-private:
-    vector<Student> students;
+// ================= Functions =================
 
-    // Helper: find student by ID
-    vector<Student>::iterator findStudent(int id) {
-        return find_if(students.begin(), students.end(),
-            [id](const Student& s) { return s.getId() == id; });
+int findStudent(vector<Student>& students, int id) {
+    for (int i = 0; i < students.size(); i++) {
+        if (students[i].getId() == id) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+
+void addStudent(vector<Student>& students) {
+    int id;
+    string name;
+    double gpa;
+
+    cout << "Enter ID: ";
+    cin >> id;
+
+    if (findStudent(students, id) != -1) {
+        cout << "Student already exists!\n";
+        return;
     }
 
-public:
-    void addStudent() {
-        int id;
-        string name;
-        double gpa;
+    cout << "Enter Name: ";
+    cin >> name;
 
-        cout << "Enter ID: ";
-        cin >> id;
-
-        if (findStudent(id) != students.end()) {
-            cout << "❌ ID already exists!\n";
-            return;
-        }
-
-        cout << "Enter Name: ";
-        cin >> name;
-
-        cout << "Enter GPA (0 - 4): ";
+    cout << "Enter GPA (0 - 4): ";
+    while (true) {
         cin >> gpa;
 
-        if (gpa < 0.0 || gpa > 4.0) {
-            cout << "❌ Invalid GPA!\n";
-            return;
+        if (cin.fail()) {
+            cout << "Invalid input! Enter number: ";
+            cin.clear();
+            cin.ignore(1000, '\n');
         }
-
-        students.emplace_back(id, name, gpa);
-        cout << "✅ Student added successfully.\n";
+        else if (gpa < 0 || gpa > 4) {
+            cout << "GPA must be between 0 and 4: ";
+        }
+        else {
+            break;
+        }
     }
 
-    void removeStudent() {
-        int id;
-        cout << "Enter ID to remove: ";
-        cin >> id;
+    students.push_back(Student(id, name, gpa));
+    cout << "Student added successfully.\n";
+}
 
-        auto it = findStudent(id);
-        if (it == students.end()) {
-            cout << "❌ Student not found.\n";
-            return;
-        }
+//
+void removeStudent(vector<Student>& students) {
+    int id;
+    cout << "Enter ID: ";
+    cin >> id;
 
-        students.erase(it);
-        cout << "✅ Student removed.\n";
+    int index = findStudent(students, id);
+
+    if (index == -1) {
+        cout << "Student not found.\n";
+        return;
     }
 
-    void searchStudent() {
-        int id;
-        cout << "Enter ID to search: ";
-        cin >> id;
+    students.erase(students.begin() + index);
+    cout << "Student removed.\n";
+}
 
-        auto it = findStudent(id);
-        if (it == students.end()) {
-            cout << "❌ Not found.\n";
-            return;
-        }
 
-        it->display();
+void searchStudent(vector<Student>& students) {
+    int id;
+    cout << "Enter ID: ";
+    cin >> id;
+
+    int index = findStudent(students, id);
+
+    if (index == -1) {
+        cout << "Student not found.\n";
+        return;
     }
 
-    void displayAll() {
-        if (students.empty()) {
-            cout << "No students available.\n";
-            return;
-        }
+    students[index].display();
+}
 
-        for (const auto& s : students)
-            s.display();
+
+void displayAll(vector<Student>& students) {
+    if (students.empty()) {
+        cout << "No students.\n";
+        return;
     }
 
-    void enrollCourse() {
-        int id;
-        string course;
+    for (int i = 0; i < students.size(); i++) {
+        students[i].display();
+    }
+}
 
-        cout << "Enter Student ID: ";
-        cin >> id;
 
-        auto it = findStudent(id);
-        if (it == students.end()) {
-            cout << "❌ Student not found.\n";
-            return;
-        }
+void enrollCourse(vector<Student>& students) {
+    int id;
+    cout << "Enter ID: ";
+    cin >> id;
 
-        cout << "Enter Course Name: ";
+    int index = findStudent(students, id);
+
+    if (index == -1) {
+        cout << "Student not found.\n";
+        return;
+    }
+
+    cout << "Enter courses (type 'stop' to finish):\n";
+
+    string course;
+    while (true) {
         cin >> course;
 
-        it->addCourse(course);
-        cout << "✅ Course added.\n";
-    }
-
-    void showCourses() {
-        int id;
-        cout << "Enter Student ID: ";
-        cin >> id;
-
-        auto it = findStudent(id);
-        if (it == students.end()) {
-            cout << "❌ Student not found.\n";
-            return;
+        if (course == "stop") {
+            break;
         }
 
-        it->showCourses();
+        students[index].addCourse(course);
     }
 
-    void sortByGPA() {
-        sort(students.begin(), students.end(),
-            [](const Student& a, const Student& b) {
-                return a.getGpa() > b.getGpa();
-            });
+    cout << "Courses added successfully.\n";
+}
 
-        cout << "✅ Students sorted by GPA.\n";
+
+void showCourses(vector<Student>& students) {
+    int id;
+    cout << "Enter ID: ";
+    cin >> id;
+
+    int index = findStudent(students, id);
+
+    if (index == -1) {
+        cout << "Student not found.\n";
+        return;
     }
-};
+
+    students[index].showCourses();
+}
+
+
+void sortStudents(vector<Student>& students) {
+    sort(students.begin(), students.end(),
+        [](Student a, Student b) {
+            return a.getGpa() > b.getGpa();
+        });
+
+    cout << "Students sorted by GPA.\n";
+}
 
 // ================= MAIN =================
 int main() {
-    StudentSystem system;
+    vector<Student> students;
     int choice;
 
     do {
-        cout << "\n===== Student Management System =====\n";
+        cout << "\n===== MENU =====\n";
         cout << "1. Add Student\n";
         cout << "2. Remove Student\n";
         cout << "3. Search Student\n";
-        cout << "4. Display All Students\n";
-        cout << "5. Enroll Student in Course\n";
-        cout << "6. Show Student Courses\n";
-        cout << "7. Sort Students by GPA\n";
+        cout << "4. Display All\n";
+        cout << "5. Enroll Course\n";
+        cout << "6. Show Courses\n";
+        cout << "7. Sort by GPA\n";
         cout << "8. Exit\n";
         cout << "Choice: ";
         cin >> choice;
 
         switch (choice) {
-        case 1: system.addStudent(); break;
-        case 2: system.removeStudent(); break;
-        case 3: system.searchStudent(); break;
-        case 4: system.displayAll(); break;
-        case 5: system.enrollCourse(); break;
-        case 6: system.showCourses(); break;
-        case 7: system.sortByGPA(); break;
-        case 8: cout << "Exiting...\n"; break;
-        default: cout << "❌ Invalid choice.\n";
+        case 1: addStudent(students); break;
+        case 2: removeStudent(students); break;
+        case 3: searchStudent(students); break;
+        case 4: displayAll(students); break;
+        case 5: enrollCourse(students); break;
+        case 6: showCourses(students); break;
+        case 7: sortStudents(students); break;
+        case 8: cout << "Goodbye!\n"; break;
+        default: cout << "Invalid choice\n";
         }
 
     } while (choice != 8);
